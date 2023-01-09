@@ -3,20 +3,20 @@
 <variable id="yCukJvf+}DI$`2`^cN+P">gripperTimer</variable>
 <variable id="655O_Z[Qw!*e~6EhY/~^">drive</variable>
 <variable id="Qr^TMzV|^Oy7~:qq-dd!">gripperClosed</variable>
-<variable id="_-|Yvy-cnBtu;rpAzkIW">gripperOn</variable>
 <variable id="@#hZofP-kS.B;JELSK1g">strafe</variable>
+<variable id="_-|Yvy-cnBtu;rpAzkIW">gripperOn</variable>
 <variable id="9RwB,j]OcLuO/bMu2B:B">turn</variable>
 <variable id="OdK72rsIx@qrIs^V|o2:">gripperOpen</variable>
 <variable id="nXdat$fzgU]+H^/6RSX7">denominator</variable>
 <variable id="o3`lk9N;S8*?/):2KSfy">rightFrontPower</variable>
 <variable id="P6,9oWti@L4h$z(eP[Qb">maxPosition</variable>
+<variable id="XB%N^z@rU,R*hmFn2h.4">leftFrontPower</variable>
 <variable id="*6vMiz{B/1gMdOtjc=|0">lowPosition</variable>
 <variable id="iF8psLsgO+i2[Tr)091@">midPosition</variable>
-<variable id="XB%N^z@rU,R*hmFn2h.4">leftFrontPower</variable>
-<variable id="nSdiu)|y!g#vlPSOvlo}">sliderTolerance</variable>
-<variable id="Tdc}Cdye+#6wLzNolwzd">sliderSetPoint</variable>
-<variable id="|}%+.v/9y?6~Qp=XRs|[">sliderSpeed</variable>
 <variable id="5$fMONc3KEnZN1o*!;P6">rightBackPower</variable>
+<variable id="nSdiu)|y!g#vlPSOvlo}">sliderTolerance</variable>
+<variable id="|}%+.v/9y?6~Qp=XRs|[">sliderSpeed</variable>
+<variable id="Tdc}Cdye+#6wLzNolwzd">sliderSetPoint</variable>
 <variable id="G1@K$aD}-FC3fhJdqr3g">leftBackPower</variable>
 <variable id="6fF5MW.ryBbyHr]x6su6">sliderTimer</variable>
 </variables>
@@ -114,7 +114,7 @@
 <field name="VAR" id="OdK72rsIx@qrIs^V|o2:">gripperOpen</field>
 <value name="VALUE">
 <block type="math_number" id="JTp+3x?;HQU5@xP}qhTH">
-<field name="NUM">0.09</field>
+<field name="NUM">0.23</field>
 </block>
 </value>
 <next>
@@ -122,7 +122,7 @@
 <field name="VAR" id="Qr^TMzV|^Oy7~:qq-dd!">gripperClosed</field>
 <value name="VALUE">
 <block type="math_number" id="SxhBbb:SEDY*Wzg+4nE%">
-<field name="NUM">0.35</field>
+<field name="NUM">0.6</field>
 </block>
 </value>
 <next>
@@ -295,7 +295,7 @@
 </block>
 </statement>
 </block>
-<block type="procedures_defnoreturn" id="O[3^vbr##{IsI62/g|?8" collapsed="true" x="0" y="474">
+<block type="procedures_defnoreturn" id="O[3^vbr##{IsI62/g|?8" x="0" y="474">
 <field name="NAME">resetSlider</field>
 <comment pinned="false" h="80" w="160">Describe this function...</comment>
 <statement name="STACK">
@@ -379,11 +379,11 @@
 <block type="dcMotor_setProperty_Number" id="+f@n;K9*XnoiPa?5ks?Y">
 <field name="IDENTIFIER">sliderMotorAsDcMotor</field>
 <field name="PROP">TargetPosition</field>
-<comment pinned="false" h="59.369903564453125" w="336.25299072265625">Set target position to something very low so that it keeps going util it touches the button.</comment>
+<comment pinned="false" h="59" w="336">Set target position to something very low so that it keeps going util it touches the button.</comment>
 <data>{"IDENTIFIER":"sliderMotor"}</data>
 <value name="VALUE">
 <shadow type="math_number" id="o0cw8u6w/[L[lf!w-jX%">
-<field name="NUM">-10000</field>
+<field name="NUM">-5000</field>
 </shadow>
 </value>
 <next>
@@ -398,7 +398,7 @@
 <value name="BOOL">
 <block type="logic_operation" id="{%v|PEj?I!?}0z0N5;-O">
 <field name="OP">AND</field>
-<comment pinned="false" h="84.93325805664062" w="497.2574462890625">Continue moving until the button is pressed or 1 second has elapsed (in case the button is broken) or mechanism is stuck for any reason. This prevents the motor from burning due to it never reaching the zero position.</comment>
+<comment pinned="false" h="84" w="497">Continue moving until the button is pressed or 1 second has elapsed (in case the button is broken) or mechanism is stuck for any reason. This prevents the motor from burning due to it never reaching the zero position.</comment>
 <value name="A">
 <block type="logic_negate" id="r$ajTcD.+MXU{RYP5yf)">
 <value name="BOOL">
@@ -1480,7 +1480,7 @@
 <data>{"IDENTIFIER":"Gripper"}</data>
 <value name="VALUE">
 <shadow type="math_number" id="XR{K$EmmI]fpY;x:xHH9">
-<field name="NUM">0.2</field>
+<field name="NUM">0</field>
 </shadow>
 </value>
 </block>
@@ -1492,30 +1492,11 @@
 <data>{"IDENTIFIER":"Gripper"}</data>
 <value name="VALUE">
 <shadow type="math_number" id="5/9#q+B;b2t_JlV2T(qi">
-<field name="NUM">0.8</field>
+<field name="NUM">1</field>
 </shadow>
 </value>
 </block>
 </statement>
-<next>
-<block type="telemetry_addNumericData_Number" id="oNjC(w`w26y+E[FnhDEN" disabled="true">
-<value name="KEY">
-<shadow type="text" id="aJTsIn4|/=$W0[4lbexU">
-<field name="TEXT">Gripper</field>
-</shadow>
-</value>
-<value name="NUMBER">
-<shadow type="math_number" id="D5c5XP={tFu!tlB3uPcz">
-<field name="NUM">123</field>
-</shadow>
-<block type="servo_getProperty_Number" id="b@Eny^onwt(UW^$NoQTJ">
-<field name="IDENTIFIER">GripperAsServo</field>
-<field name="PROP">Position</field>
-<data>{"IDENTIFIER":"Gripper"}</data>
-</block>
-</value>
-</block>
-</next>
 </block>
 </next>
 </block>
