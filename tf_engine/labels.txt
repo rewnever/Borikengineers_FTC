@@ -1,0 +1,9 @@
+0 Rojo_1
+1 Rojo_2
+2 Flamboyan
+3 Bandera
+4 Garita
+5 Rojo_3
+6 Azul_1
+7 Azul_2
+8 Azul_3
