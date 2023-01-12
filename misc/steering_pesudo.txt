@@ -1,0 +1,222 @@
+  * Method to perfmorm a relative move, based on encoder counts.
+     *  Encoders are not reset as the move is based on the current position.
+     *  Move will stop if any of three conditions occur:
+     *  1) Move gets to the desired position
+     *  2) Move runs out of time
+     *  3) Driver stops the opmode running.
+     *
+     * @param speed                 Motor power (0 to 1.0)
+     * @param distance              Inches
+     * @param timeout               Seconds
+     * @param useGyro               Use gyro to keep/curve to an absolute heading
+     * @param heading               Heading to use degrees
+     * @throws InterruptedException
+     */
+public void encoderDrive(double speed,
+                             double distance,
+                             double timeout,
+                             boolean useGyro,
+                             double heading,
+                             ) throws InterruptedException {
+
+
+        // Calculated encoder targets
+        int newLFTarget;
+        int newRFTarget;
+        int newLRTarget;
+        int newRRTarget;
+
+
+        // The potentially adjusted current target heading
+        double curHeading = heading;
+
+
+        // Speed ramp on start of move to avoid wheel slip
+        final double MINSPEED = 0.30;           // Start at this power
+        final double SPEEDINCR = 0.015;         // And increment by this much each cycle
+        double curSpeed;                        // Keep track of speed as we ramp
+
+
+        double leftDistance = distance;
+        double rightDistance = distance;
+
+
+        // Ensure that the opmode is still active
+        if (opModeIsActive()) {
+
+
+
+
+            // Calculate "adjusted" distance  for each side to account for requested turn during run
+            // Purpose of code is to have PIDs closer to finishing even on curved moves
+            // This prevents jerk to one side at stop
+
+
+            if (useGyro) {
+                // We are gyro steering -- are we requesting a turn while driving?
+                double headingChange = getError(curHeading);
+                if (Math.abs(headingChange) > 5.0) {
+                    //Heading change is significant enough to account for
+                    if (headingChange > 0.0) {
+                        // Assume 16 inch wheelbase
+                        // Add extra distance to the wheel on outside of turn
+                        rightDistance += 2 * 3.1415 * 16 * headingChange / 360.0;
+                    } else {
+                        // Assume 16 inch wheelbase
+                        // Add extra distance from the wheel on inside of turn
+                        // headingChange is - so this is increasing the left distance
+                        leftDistance -= 2 * 3.1415 * 16 * headingChange / 360.0;
+                    }
+                }
+            }
+
+
+            // Determine new target encoder positions, and pass to motor controller
+            newLFTarget = robot.lfDrive.getCurrentPosition() + (int)(leftDistance * robot.COUNTS_PER_INCH);
+            newLRTarget = robot.lrDrive.getCurrentPosition() + (int)(leftDistance * robot.COUNTS_PER_INCH);
+            newRFTarget = robot.rfDrive.getCurrentPosition() + (int)(rightDistance * robot.COUNTS_PER_INCH);
+            newRRTarget = robot.rrDrive.getCurrentPosition() + (int)(rightDistance * robot.COUNTS_PER_INCH);
+
+
+            robot.lfDrive.setTargetPosition(newLFTarget);
+            robot.rfDrive.setTargetPosition(newRFTarget);
+            robot.lrDrive.setTargetPosition(newLRTarget);
+            robot.rrDrive.setTargetPosition(newRRTarget);
+
+
+            // Turn On motors to RUN_TO_POSITION
+        robot.lfDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        robot.lrDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        robot.rfDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        robot.rrDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+
+
+
+            // reset the timeout time and start motion.
+            runtime.reset();
+
+
+            speed = Math.abs(speed);    // Make sure its positive
+            curSpeed = Math.min(MINSPEED,speed);
+
+
+            // Set the motors to the starting power
+            robot.lfDrive.setPower(Math.abs(curSpeed));
+            robot.rfDrive.setPower(Math.abs(curSpeed));
+            robot.lrDrive.setPower(Math.abs(curSpeed));
+            robot.rrDrive.setPower(Math.abs(curSpeed));
+
+
+            // keep looping while we are still active, and there is time left, until at least 1 motor reaches target
+            while (opModeIsActive() &&
+                   (runtime.seconds() < timeout) &&
+                    robot.lfDrive.isBusy() &&
+                    robot.lrDrive.isBusy() &&
+                    robot.rfDrive.isBusy() &&
+                    robot.rrDrive.isBusy()) {
+
+
+                // Ramp up motor powers as needed
+                if (curSpeed < speed) {
+                    curSpeed += SPEEDINCR;
+                }
+                double leftSpeed = curSpeed;
+                double rightSpeed = curSpeed;
+
+
+                // Doing gyro heading correction?
+                if (useGyro){
+
+
+                    // adjust relative speed based on heading
+                    double error = getError(curHeading);
+                    double steer = getSteer(error, 0.05);
+
+
+                    // if driving in reverse, the motor correction also needs to be reversed
+                    if (distance < 0)
+                        steer *= -1.0;
+
+
+                    // Adjust motor powers for heading correction
+                    leftSpeed -= steer;
+                    rightSpeed += steer;
+
+
+                    // Normalize speeds if any one exceeds +/- 1.0;
+                    double max = Math.max(Math.abs(leftSpeed), Math.abs(rightSpeed));
+                    if (max > 1.0)
+                    {
+                        leftSpeed /= max;
+                        rightSpeed /= max;
+                    }
+
+
+                }
+
+
+                // And rewrite the motor speeds
+                robot.lfDrive.setPower(Math.abs(leftSpeed));
+                robot.rfDrive.setPower(Math.abs(rightSpeed));
+                robot.lrDrive.setPower(Math.abs(leftSpeed));
+                robot.rrDrive.setPower(Math.abs(rightSpeed));
+
+
+                // Allow time for other processes to run.
+                idle();
+            }
+
+
+
+
+            // Stop all motion;
+            robot.lfDrive.setPower(0);
+            robot.rfDrive.setPower(0);
+            robot.lrDrive.setPower(0);
+            robot.rrDrive.setPower(0);
+
+
+            // Turn off RUN_TO_POSITION
+            robot.setDriveMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
+    }
+
+
+
+
+    /**
+     * getError determines the error between the target angle and the robot's current heading
+     * @param   targetAngle  Desired angle (relative to global reference established at last Gyro Reset).
+     * @return  error angle: Degrees in the range +/- 180. Centered on the robot's frame of reference
+     *          +ve error means the robot should turn LEFT (CCW) to reduce error.
+     */
+
+
+public double getError(double targetAngle) {
+
+
+        double robotError;
+
+
+
+
+        // calculate error in -179 to +180 range  (
+        robotError = targetAngle - readGyro();
+        while (robotError > 180)  robotError -= 360;
+        while (robotError <= -180) robotError += 360;
+        return robotError;
+    }
+
+
+    /**
+     * returns desired steering force.  +/- 1 range.  +ve = steer left
+     * @param error   Error angle in robot relative degrees
+     * @param PCoeff  Proportional Gain Coefficient
+     * @return
+     */
+
+
+public double getSteer(double error, double PCoeff) {
+        return Range.clip(error * PCoeff, -1, 1);
+    }
